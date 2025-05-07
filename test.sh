@@ -47,7 +47,7 @@ trap exit_on_signal_SIGINT SIGINT
 trap exit_on_signal_SIGTERM SIGTERM
 
 ## Prerequisite
-Prerequisite() { 
+Prerequisite() {
     dependencies=(feh xrandr crontab)
     for dependency in "${dependencies[@]}"; do
         type -p "$dependency" &>/dev/null || {
@@ -64,17 +64,17 @@ usage() {
 		${RED}╺┳┓╻ ╻┏┓╻┏━┓┏┳┓╻┏━╸   ${GREEN}╻ ╻┏━┓╻  ╻  ┏━┓┏━┓┏━┓┏━╸┏━┓
 		${RED} ┃┃┗┳┛┃┗┫┣━┫┃┃┃┃┃     ${GREEN}┃╻┃┣━┫┃  ┃  ┣━┛┣━┫┣━┛┣╸ ┣┳┛
 		${RED}╺┻┛ ╹ ╹ ╹╹ ╹╹ ╹╹┗━╸   ${GREEN}┗┻┛╹ ╹┗━╸┗━╸╹  ╹ ╹╹  ┗━╸╹┗╸${WHITE}
-		
+
 		Dwall V3.0   : Set wallpapers according to current time.
 		Developed By : Aditya Shakya (@adi1090x)
-			
+
 		Usage : `basename $0` [-h] [-p] [-s style]
 
 		Options:
 		   -h	Show this help message
 		   -p	Use pywal to set wallpaper
 		   -s	Name of the style to apply
-		   
+
 	EOF
 
 	styles=(`ls "$DIR"`)
@@ -83,10 +83,10 @@ usage() {
 	printf -- '\n\n'${WHITE}
 
     cat <<- EOF
-		Examples: 
+		Examples:
 		`basename $0` -s beach        Set wallpaper from 'beach' style
 		`basename $0` -p -s sahara    Set wallpaper from 'sahara' style using pywal
-		
+
 	EOF
 }
 
@@ -116,6 +116,14 @@ set_gnome() {
 	gsettings set org.gnome.desktop.screensaver picture-uri "file:///$1"
 }
 
+## Set wallpaper in xfce
+set_xfce(){
+	# iterates over the active monitors and sets the wallpaper
+	for mon in $(xrandr --listactivemonitors | awk -F ' ' '!/Monitors/ {print $2}' | tr -d \*+); do
+		xfconf-query --channel xfce4-desktop --property /backdrop/screen0/monitor$mon/workspace0/last-image --set $1
+	done;
+}
+
 ## Choose wallpaper setter
 case "$OSTYPE" in
 	linux*)
@@ -123,9 +131,7 @@ case "$OSTYPE" in
 				if [[ "$DESKTOP_SESSION" =~ ^(MATE|Mate|mate)$ ]]; then
 					SETTER="gsettings set org.mate.background picture-filename"
 				elif [[ "$DESKTOP_SESSION" =~ ^(Xfce Session|xfce session|XFCE|xfce|Xubuntu|xubuntu)$ ]]; then
-					SCREEN="$(xrandr --listactivemonitors | awk -F ' ' 'END {print $1}' | tr -d \:)"
-					MONITOR="$(xrandr --listactivemonitors | awk -F ' ' 'END {print $2}' | tr -d \*+)"
-					SETTER="xfconf-query --channel xfce4-desktop --property /backdrop/screen$SCREEN/monitor$MONITOR/workspace0/last-image --set"
+					SETTER="set_xfce"
 				elif [[ "$DESKTOP_SESSION" =~ ^(LXDE|Lxde|lxde)$ ]]; then
 					SETTER="pcmanfm --set-wallpaper"
 				elif [[ "$DESKTOP_SESSION" =~ ^(cinnamon|Cinnamon)$ ]]; then
@@ -134,7 +140,7 @@ case "$OSTYPE" in
 					SETTER=set_kde
 				elif [[ "$DESKTOP_SESSION" =~ ^(PANTHEON|Pantheon|pantheon|GNOME|Gnome|gnome|Gnome-xorg|gnome-xorg|gnome-classic|UBUNTU|Ubuntu|ubuntu|DEEPIN|Deepin|deepin|POP|Pop|pop|ZORIN|Zorin|zorin|budgie-desktop)$ ]]; then
 					SETTER=set_gnome
-				else 
+				else
 					SETTER="feh --bg-fill"
 				fi
 			elif [[ "$XDG_SESSION_TYPE" == 'wayland' ]]; then
@@ -198,7 +204,7 @@ set_wallpaper() {
 		touch "$cfile"
 		echo "$image.$FORMAT" > "$cfile"
 	else
-		echo "$image.$FORMAT" > "$cfile"	
+		echo "$image.$FORMAT" > "$cfile"
 	fi
 }
 
